@@ -1,8 +1,7 @@
 import networkx as nx
-import matplotlib.pylab as plt
 
 
-def graphloader(filename):
+def graph_loader(filename):
     G = nx.Graph()
     file = open(filename, "r")
     lines = file.readlines()
@@ -33,7 +32,7 @@ def kruskal(graph):
     return nx.minimum_spanning_tree(graph)
 
 
-def buildgraphofsolution(solution, graph):
+def build_graph_of_solution(solution, graph):
     G = nx.Graph(graph)
     for i in range(0, len(solution)):
         if solution[i] == '0':
@@ -41,33 +40,35 @@ def buildgraphofsolution(solution, graph):
     return G
 
 
-def sizeofsolution(graph):
-    nbnodes = len(graph)
-    nodeslist = list(graph.nodes.data('term'))
+def size_of_solution(graph):
+    nb_nodes = len(graph)
+    nodes_list = list(graph.nodes.data('term'))
     cpt = 0
-    for node in nodeslist:
+    for node in nodes_list:
         if node[1]:
             cpt += 1
-    return nbnodes - cpt
+    return nb_nodes - cpt
 
-def fitnessevaluation(solution, graph):
+
+def fitness_evaluation(solution, graph):
     m = 50
-    subgraph = buildgraphofsolution(solution, graph)
-    kurskalsub = kruskal(subgraph)
+    sub_graph = build_graph_of_solution(solution, graph)
+    kurskal_sub = kruskal(sub_graph)
     res = 0
-    for edge in nx.get_edge_attributes(kurskalsub, "weight").values():
+    for edge in nx.get_edge_attributes(kurskal_sub, "weight").values():
         res += edge
-    if nx.is_connected(kurskalsub):
+    if nx.is_connected(kurskal_sub):
         return res
     else:
-        nbnodes = len(kurskalsub)
-        nbedges = kurskalsub.number_of_edges()
-        return res + m * ((nbnodes - 1) - nbedges)
-graph = graphloader("B/b01.stp")
+        nb_nodes = len(kurskal_sub)
+        nb_edges = kurskal_sub.number_of_edges()
+        return res + m * ((nb_nodes - 1) - nb_edges)
+
+
+# graph = graphloader("B/b01.stp")
 #print(graph.nodes.data())
 #for e in graph.edges.data():
 #    print(e)
-print("test")
 #print(graph.number_of_nodes())
 #nx.draw(graph)
 #plt.show()
