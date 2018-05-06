@@ -82,6 +82,8 @@ def fitness_evaluation(solution, graph):
     sub_graph = build_graph_of_solution(solution, graph)
     kruskal_sub = kruskal(sub_graph)
     res = kruskal_sub.size('weight')
+    graph.edges
+    # TODO: Change .size; inefficient ?
     # for edge in nx.get_edge_attributes(kruskal_sub, "weight").values():
     #     res += edge
     if kruskal_sub.number_of_edges() != kruskal_sub.number_of_nodes()-1:

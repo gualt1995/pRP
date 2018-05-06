@@ -1,5 +1,4 @@
 from itertools import combinations
-from tools import draw_graph, randomise_graph
 import networkx as nx
 import graph_tools as gt
 
@@ -34,7 +33,6 @@ def _replace_distance_by_path(G, original_graph):
 
     Returns: (networkx.Graph)
     """
-    original_graph.fresh_copy()
     new_graph = nx.Graph()
 
     for edge in G.edges.data('path'):
@@ -55,7 +53,9 @@ def _prune_graph(G):
     Args:
         G: Graph to prune.
 
-    Returns: (networkx.Graph)
+    Returns: (networkx.Graph * boolean)
+        The pruned graph and a boolean indicating if the graph was actually
+        modified.
     """
     new_graph = nx.Graph(G)
 
@@ -108,12 +108,11 @@ def h_mst(G):
     while graph_modified:
         new_graph = gt.kruskal(new_graph)
         new_graph, graph_modified = _prune_graph(new_graph)
-        draw_graph(new_graph)
 
     return new_graph
 
 
-if __name__ == "__main__":
-    G = gt.graph_loader("B/b15.stp")
-    # h_shortest_path(G)
-    # mst_g = h_mst(G)
+construction_heuristics = {
+    'shortest_path': h_shortest_path,
+    'mst': h_mst
+}
