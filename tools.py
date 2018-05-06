@@ -44,7 +44,23 @@ def generation(size, proba):
     return res
 
 
-def draw_graph(G):
+def randomise_graph(G, perturbation=(0.05, 0.2)):
+    """Randomise the edges' weight of G. Each weight is displaced from their
+    original value according to the percentages of `perturbation`.
+
+    Args:
+        G: Original graph.
+        perturbation (tuple float): Min and max perturbation from the
+            original value.
+
+    Returns: (networkx.Graph)
+    """
+    for edge in G.edges.data('weight'):
+        deviated_value = random.uniform(edge[2] - edge[2]*perturbation[0], edge[2] + edge[2]*perturbation[1])
+        G.edges[edge[0], edge[1]]['weight'] = deviated_value
+
+
+def draw_graph(G, draw_edge_labels=False):
     """Draws a graph.
     Terminal nodes are colored in red.
     Regular nodes are colored in blue.
@@ -61,5 +77,6 @@ def draw_graph(G):
 
     nx.draw(G, pos=pos, node_size=50, node_color=colors, edge_color="#BDBDBD")
     # nx.draw_networkx_labels(G, pos=pos)
-    # nx.draw_networkx_edge_labels(G, pos=pos)
+    if draw_edge_labels:
+        nx.draw_networkx_edge_labels(G, pos=pos)
     plt.show()
