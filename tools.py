@@ -48,7 +48,7 @@ def generation(size, proba):
     return res
 
 
-def randomise_graph(G, perturbation=(0.05, 1.0)):
+def randomise_graph(G, perturbation=(0.05, 0.2)):
     """Randomise the edges' weight of G. Each weight is displaced from their
     original value according to the percentages of `perturbation`.
 

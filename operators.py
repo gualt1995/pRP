@@ -16,8 +16,8 @@ def single_point_crossover(parent1, parent2, p_crossover=1.0):
         The children produced by the operator.
     """
     p = random.random()
-    if p_crossover < p:
-        index = random.randint(len(parent1))
+    if p < p_crossover:
+        index = random.randint(0, len(parent1))
         firstpar1, secondpar1 = parent1[:index], parent1[index:]
         firstpar2, secondpar2 = parent2[:index], parent2[index:]
         parent1 = firstpar1 + secondpar2
@@ -26,7 +26,7 @@ def single_point_crossover(parent1, parent2, p_crossover=1.0):
 
 
 def uniform_crossover(parent1, parent2, p):
-    TRESHOLD = 0.8
+    TRESHOLD = 0.5
     child1 = ""
     child2 = ""
     for i in range(len(parent1)):
@@ -51,7 +51,7 @@ def uniform_mutation(solution):
     """
     res = ""
     for bit in solution:
-        if random.randint(1,101) < 5:
+        if random.random() < 1/len(solution):
             if bit == "0":
                 res += "1"
             else:
