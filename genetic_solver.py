@@ -21,6 +21,7 @@ def genetic_algorithm(G, max_steps=100, pop_size=100, operator='single_point_cro
         generation_type (string): Type of generation.
         p_gen (float or tuple, optional): Proportion of bits to 1; used for the generation
             of the initial population.
+        construction_heuristic (string): Type of heuristic used for the population generation
         p_operator (float): Probability for the operator to have an effect on the
             selected parents.
 
