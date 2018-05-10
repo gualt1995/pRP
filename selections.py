@@ -2,18 +2,30 @@ import random
 from operator import itemgetter
 
 
-class Selection:
-    """Selection process.
-
-    Attributes:
-        _selection_pool (list tuple): All subclasses must compute a
-            selection pool from which chromosomes will be selected.
+class FitnessProportionateSelection:
+    """Implements a fitness proportionate selection process.
+    The selection pool is constructed as a list usable by the
+    `Selection.select` function.
     """
 
+    def __init__(self, **kwargs):
+        """Construct the selection pool, a list of tuples sorted by
+        cumulative fitness.
+
+        Args:
+            solutions (tuple list): List of candidate solutions with
+                their associated fitness.
+        """
+        fitness_sum = sum(s[1] for s in kwargs['solutions'])
+        # Build cumulative fitness list..
+        self._selection_pool = list()
+        cum_sum = 0
+        for s in kwargs['solutions']:
+            self._selection_pool.append((s[0], cum_sum))
+            cum_sum += s[1] / fitness_sum
+
     def select(self, k=2):
-        """Select k chromosomes from the selection pool. By default
-        the selection pool is assumed to be a list of tuples sorted
-        by cumulative fitness.
+        """Select k chromosomes from the selection pool.
 
         Args:
             k (int): Number of chromosomes to select.
@@ -35,29 +47,7 @@ class Selection:
         return parents
 
 
-class FitnessProportionateSelection(Selection):
-    """Implements a fitness proportionate selection process.
-    The selection pool is constructed as a list usable by the
-    `Selection.select` function.
-    """
-
-    def __init__(self, **kwargs):
-        """Construct the selection pool.
-
-        Args:
-            solutions (tuple list): List of candidate solutions with
-                their associated fitness.
-        """
-        fitness_sum = sum(s[1] for s in kwargs['solutions'])
-        # Build cumulative fitness list..
-        self._selection_pool = list()
-        cum_sum = 0
-        for s in kwargs['solutions']:
-            self._selection_pool.append((s[0], cum_sum))
-            cum_sum += s[1] / fitness_sum
-
-
-class TournamentSelection(Selection):
+class TournamentSelection:
     """Implements a tournament selection. The probability of being chosen
     is highest for the best solution and decreases exponentially for the lower
     ranks.
@@ -79,7 +69,7 @@ class TournamentSelection(Selection):
                 their associated fitness.
             p (float): Base probability of being chosen for the best solution.
                 Defaults to 50% chance.
-            tournament_size (int): Number of candidates to be chosen in the tournament.
+            size (int): Number of candidates to be chosen in the tournament.
         """
         p = kwargs.get('p', TournamentSelection.DEFAULT_PROBABILITY)
         tournament_size = kwargs.get('size', int(len(kwargs['solutions'])
@@ -127,7 +117,7 @@ class TournamentSelection(Selection):
         return parents
 
 
-class SUSSelection(Selection):
+class SUSSelection:
     """Stochastic universal sampling"""
 
     def __init__(self, **kwargs):

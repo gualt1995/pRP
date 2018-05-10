@@ -1,2 +1,8 @@
 .idea/
 __pycache__/
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.synctex.gz(busy)
