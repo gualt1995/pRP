@@ -108,7 +108,8 @@ class TournamentSelection:
                     if parent in parents:
                         j = i - 1
                         while self._selection_pool[j][0] in parents:
-                            j = (j + 1) % len(self._selection_pool)
+                            j = len(self._selection_pool) - 1 if j-1 < 0 else j-1
+                            # j = (j + 1) % len(self._selection_pool)
                         parent = self._selection_pool[j][0]
                     break
             parents.append(parent)

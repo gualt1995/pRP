@@ -6,9 +6,10 @@ import graph_tools as gt
 
 
 def genetic_algorithm(G, max_steps=100, pop_size=100, operator='single_point_crossover',
-                      selection_process='sus', p_operator=1, p_gen=(0.2, 0.5),
-                      construction_heuristic='mst', generation_type='heuristic',
-                      mutation_type='uniform_mutation', elitism=True, elitism_propotion=0.1):
+                      selection_process='tournament', p_operator=1, p_gen=(0.2, 0.5),
+                      construction_heuristic=(('mst', 0.6), ('shortest_path', 0.1), ('random', 0.3)),
+                      generation_type='heuristic', mutation_type='uniform_mutation', elitism=True,
+                      elitism_propotion=0.1):
     """Tries to resolve the minimum Steiner tree problem with a genetic algorithm.
 
     Args:
@@ -54,7 +55,6 @@ def genetic_algorithm(G, max_steps=100, pop_size=100, operator='single_point_cro
         new_pop_fitness = list()
 
         sorted_pop_fitness = sorted(population_fitness, key=itemgetter(1), reverse=True)
-        print(1/sorted_pop_fitness[0][1])
         selection_pcss = selection_process_cls(solutions=sorted_pop_fitness)
 
         for _i in range(int(pop_size/2)):
@@ -82,7 +82,7 @@ def genetic_algorithm(G, max_steps=100, pop_size=100, operator='single_point_cro
 
 
 if __name__ == "__main__":
-    graph = gt.graph_loader("C/c07.stp")
+    graph = gt.graph_loader("C/c05.stp")
     solution = genetic_algorithm(graph)
     solution_graph = gt.kruskal(gt.build_graph_of_solution(solution[0], graph))
     print("Solution cost = {}".format(gt.fitness_evaluation(solution[0], graph)))

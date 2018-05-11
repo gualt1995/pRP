@@ -2,7 +2,7 @@ from tools import *
 from heuristics import *
 
 
-def generation(G, construction_heuristic='shortest_path', generation_type='heuristic', p_gen=(0.2, 0.5)):
+def local_search(G, construction_heuristic='shortest_path', generation_type='heuristic', p_gen=(0.2, 0.5)):
     """Tries to resolve the minimum Steiner tree problem with Local search algorithm.
 
     Args:
@@ -44,7 +44,7 @@ def neighbour(G, gsol, solution):
     Returns: (float)
         a new solution of the problem with a better fitness score than the previous one
     """
-    prevfitness = gt.fitness_evaluation(solution,G)
+    prevfitness = gt.fitness_evaluation(solution, G)
     for i in range(len(solution)):
         node = G.graph['non_term_nodes'][i]
         if solution[i] == "0":
@@ -71,4 +71,4 @@ def neighbour(G, gsol, solution):
 
 
 graph = gt.graph_loader("C/c07.stp")
-print("result fitness : " + str(generation(graph)))
+print("result fitness : " + str(local_search(graph)))

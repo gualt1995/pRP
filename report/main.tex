@@ -11,10 +11,12 @@
 \usepackage[small, sc, bf, center]{titlesec}
 \usepackage{listings}
 \usepackage{amsmath, amssymb, mathtools}
+\usepackage{cleveref}
 \usepackage{xcolor}
 \usepackage{fancyhdr}
 \usepackage{tikz}
 \usepackage{tkz-graph}
+\usepackage{csvsimple}
 %\usepackage{subcaption}
 %\usepackage{multicol}
 %-----------------------------------------------
@@ -35,6 +37,8 @@
 \tikzstyle{vertex}=[circle, draw, inner sep=0pt, minimum size=6pt]
 \newcommand{\vertex}{\node[vertex]}
 \usetikzlibrary{arrows,petri,topaths,calc}
+% ref commands
+%\newcommand{\fref}[1]{\textbf{Fig.~\ref{#1}}}
 
 %-----------------------------------------------
 % DOCUMENT BODY
@@ -51,7 +55,7 @@
 \tableofcontents
 
 \section{Introduction}
-	Ce projet aborde la résolution du problème de l'arbre de Steiner de poids minimum avec deux méthodes: un algorithme génétique et un algorithme de recherche locale. Ce problème d'optimisation combinatoire 
+	Ce projet aborde la résolution du problème de l'arbre de Steiner de poids minimum avec deux méthodes: un algorithme génétique et un algorithme de recherche locale. Le problème d'optimisation combinatoire consiste en la recherche d'un arbre de poids minimum couvrant les nœuds dits terminaux d'un graphe. La solution peut comprendre des nœuds facultatifs, dits de Steiner, pour être fortement connexe. La~\Cref{fig-ex1} montre une solution optimale en bleu qui comprend les noeuds de Steiner $u_1$ et $u_2$. 
 	
 	\begin{figure}[h!]
 		\centering
@@ -89,24 +93,141 @@
 			;
 		\end{tikzpicture}
 		\caption{Exemple de Steiner Tree Problem}
+		\label{fig-ex1}
 	\end{figure}
 	
-	L'algorithme génétique a été conçu de façon modulaire pour pouvoir accueillir différentes fonctions d'initialisation, différents opérateurs de croisement et de mutation, etc. Il a ainsi été possible d'étudier les performances de chaque composante pour les différentes types d'instances considérés. L'algorithme de recherche locale [...]
+	L'algorithme génétique a été conçu de façon modulaire afin de pouvoir accueillir différentes fonctions d'initialisation, différents opérateurs de croisement et de mutation, etc. Il a ainsi été possible d'étudier les performances de chaque composante pour les différentes types d'instances considérés. L'algorithme de recherche locale réutilise les mêmes fonctions d'initialisation.
+	
+	Dans ce rapport, tous les algorithmes sont testés sur les ensembles d'instances disponibles à l'adresse \url{http://steinlib.zib.de/testset.php}. Les instances sélectionnées parmi les ensembles $B$, $C$, $D$ et $E$, sont répertoriées en~\Cref{tab-instances}.
+	
+	\begin{table}[h!]
+		\centering
+		\begin{tabular}{|c|c|c|c|c|}
+			\hline
+			\textbf{Nom} & \textbf{Nb de sommets} & \textbf{Nb d'arêtes} & \textbf{Sommets terminaux} & \textbf{Opt} \\
+			\hline
+			b02 & 50 & 63 & 13 & 83 \\
+			b08	& 75 & 94 &	19 & 104 \\
+			b10	& 75 & 150 & 13 & 86 \\
+			b17	& 100 &	200 & 25 & 131 \\
+			b18	& 100 & 200 & 50 & 218 \\
+			c02	& 500 & 625 & 10 & 144 \\
+			c05	& 500 & 625 & 250 & 1579 \\
+			c12	& 500 & 2500 & 10 & 46 \\
+			c18 & 500 & 12500 & 83 & 113 \\
+			d02	& 1000 & 1250 & 10 & 220 \\
+			d04	& 1000 & 1250 & 250 & 1935 \\
+			d10	& 1000 & 2000 &	500 & 2110 \\
+			e02	& 2500 & 3125 & 10 & 214 \\
+			\hline
+		\end{tabular}
+		\caption{Instances de tests}
+		\label{tab-instances}
+	\end{table}
 	
 \section{Algorithme génétique}
-	Un algorithme génétique consiste généralement en l'enchaînement des actions suivantes sur plusieurs générations: \textit{Initialisation, Sélection, Crossover, Mutation}. La phase d'initialisation permet de générer une population d'individus qui seront ensuite sélectionnés, croisés, mutés afin de construire la génération suivante.
+	Un algorithme génétique consiste généralement en l'enchaînement des actions suivantes sur plusieurs générations: \textit{Initialisation, Sélection, Crossover, Mutation}. La phase d'initialisation permet de générer une population d'individus qui seront ensuite sélectionnés, croisés, et mutés afin de construire la génération suivante.
 
 	\subsection{Population initiale}
-		\subsubsection{Initialisation aléatoire}
+		Les individus solutions sont représentés par un vecteur de variables binaires pour chaque sommet facultatif, prenant la valeur $1$ si le sommet est présent dans la solution et 0 sinon. Par exemple, la solution de l'exemple en~\Cref{fig-ex1} est représenté par le vecteur suivant.
+		\begin{figure}[h!]
+			\centering
+			\begin{tabular}{|c|c|c|c|}
+				\hline
+				$u_1$ & $u_2$ & $u_3$ & $u_4$ \\
+				\hline
+				1 & 1 & 0 & 0 \\
+				\hline
+			\end{tabular}
+		\end{figure}
+	
+		\paragraph{Initialisation aléatoire}{
+			Une première approche pour la phase d'initialisation a été de produire des individus en choisissant, de manière aléatoire, les sommets pris dans la solution. Les proportions de sommets pris dans une solution sont tirées aléatoirement entre 5 et 20\% lors de la génération d'un individu. On essaye ainsi de se rapprocher le plus possible de l'optimum tout en s'assurant une certaine diversité dans la population de départ.
 			
-		\subsubsection{Heuristique du plus court chemin}
-		\subsubsection{Heuristique de l'arbre couvrant minimum}
+			La~\Cref{tab-randominit} montre des coûts de départ pour quelques instances. On se rend vite compte qu'ils se trouvent souvent bien loin des solutions optimales et c'est pourquoi on utilisera par la suite des heuristiques de construction. Le temps de résolution étant borné à 5 minutes, on essaye ainsi d'améliorer les performances de nos algorithmes. Cette méthode de génération reste cependant intéressante pour introduire de la diversité dans nos population initiales.
+			
+			\begin{table}[h!]
+				\centering
+				\begin{tabular}{|c|c|c|c|c|}
+					\hline
+					\textbf{Génération} & \textbf{Instance} & \textbf{Proportion} & \textbf{Coût} & \textbf{Opt} \\
+					\hline
+					1&b02  & 0.31 & 5075 & 83 \\
+					2&b02  & 0.45 & 3602 & 83 \\
+					3&b02  & 0.35 & 3102 & 83 \\
+					1&b08  & 0.40 & 5112 & 104 \\
+					2&b08  & 0.47 & 5180 & 104 \\
+					3&b08  & 0.36 & 3174 & 104 \\
+					1&c18  & 0.46 & 312 & 113 \\
+					2&c18  & 0.44 & 302 & 113 \\
+					3&c18  & 0.31 & 238 & 133 \\
+					\hline
+				\end{tabular}
+				\caption{Exemple de population initiale aléatoire}
+				\label{tab-randominit}
+			\end{table}
+			}
+		\paragraph{Heuristique du plus court chemin}{
+			L'heuristique de construction du plus court chemin reste la plus efficace en terme de coût initial. Elle consiste en la construction d'un arbre couvrant depuis le graphe des distances des sommets terminaux. Puisqu'elle est déterministe, on procède avant la génération à une randomisation du graphe problème pour obtenir davantage d'individus différents.
+		
+		La~\Cref{tab-spinit} présente les coups obtenus grâce à cette heuristique pour quelques instances. Le graphe d'origine est altéré de 5 à 20\% pour chaque poids mais il est apparent que la perturbation de l'heuristique est faible: les solutions générées sont souvent identiques.
+		
+		\begin{table}[h!]
+				\centering
+				\begin{tabular}{|c|c|c|c|}
+					\hline
+					\textbf{Génération} & \textbf{Instance} & \textbf{Coût} & \textbf{Opt} \\
+					\hline
+					1 & b02  & 92 & 83 \\
+					2 & b02  & 94 & 83 \\
+					3 & b02  & 92 & 83 \\
+					1 & b08  & 113 & 104 \\
+					2 & b08  & 113 & 104 \\
+					3 & b08  & 113 & 104 \\
+					1 & c18  & 137 & 113 \\
+					2 & c18  & 142 & 113 \\
+					3 & c18  & 139 & 133 \\
+					\hline
+				\end{tabular}
+				\caption{Génération avec heuristique du plus court chemin}
+				\label{tab-spinit}
+			\end{table}
+		}
+		\paragraph{Heuristique de l'arbre couvrant minimum}{
+		Cette heuristique nous permet d'améliorer la diversité de la population initiale. Quelques générations sont présentées en~\Cref{tab-mstinit}.
+		
+		\begin{table}[h!]
+			\centering
+			\begin{tabular}{|c|c|c|c|}
+				\hline
+				\textbf{Génération} & \textbf{Instance} & \textbf{Coût} & \textbf{Opt} \\
+				\hline
+				1&b02  & 93  &83 \\
+				2&b02  & 97   &83\\
+				3&b02  & 96  &83 \\
+				1&b08  & 111  &104\\
+				2&b08  & 107  &104\\
+				3&b08  & 107  &104\\
+				1&c18  & 224  &133\\
+				2&c18  & 210  &133\\
+				3&c18  & 209  &133\\
+				\hline
+			\end{tabular}
+			\caption{Génération avec heuristique de l'arbre couvrant minimum}
+			\label{tab-mstinit}
+		\end{table}
+		}
+		
+		Notre algorithme génétique 
 
-	\subsection{Opérateurs de sélection et croisement}
+	\subsection{Processus de sélection}
 			
-		\subsubsection{Fitness proportionate selection}
-		\subsubsection{Stochastic Universal Sampling}
-		\subsubsection{Tournament Selection}
+		\paragraph{Fitness proportionate selection}{}
+		\paragraph{Stochastic Universal Sampling}{}
+		\paragraph{Tournament Selection}{}
+	\subsection{Opérateurs de croisement}
+		\paragraph{Croisement à point}{}
+		\paragraph{Croisement uniforme}{}
 	
 	
 \section{Recherche locale}

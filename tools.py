@@ -69,14 +69,22 @@ def randomise_graph(G, perturbation=(0.05, 0.2)):
 
 def heuristic_generation(n, G, **kwargs):
     population = list()
+    size = gt.size_of_solution(G)
     heuristic = kwargs.get('heuristic', 'shortest_path')
+    if type(heuristic) == 'str':
+        heuristic = [(heuristic, 1.0)]
 
-    for _ in range(n):
-        G_h = construction_heuristics[heuristic](randomise_graph(G))
-        solution = "".join("1" if node in G_h else "0" for node in G.graph['non_term_nodes'])
-        population.append(solution)
+    for h in heuristic:
+        m = int(n * h[1])
+        for _ in range(m):
+            if h[0] == 'random':
+                population.append(generation(size, random.uniform(0.2, 0.5)))
+            else:
+                G_h = construction_heuristics[h[0]](randomise_graph(G))
+                solution = "".join("1" if node in G_h else "0" for node in G.graph['non_term_nodes'])
+                population.append(solution)
 
-        print("Generated with h={} -> {}".format(heuristic, solution))
+                print("Generated with h={} -> {}".format(h[0], solution))
 
     return population
 
