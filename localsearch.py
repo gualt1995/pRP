@@ -1,5 +1,6 @@
 from tools import *
 from heuristics import *
+import time
 
 
 def local_search(G, construction_heuristic='shortest_path', generation_type='heuristic', p_gen=(0.2, 0.5)):
@@ -25,10 +26,13 @@ def local_search(G, construction_heuristic='shortest_path', generation_type='heu
     solgraph = gt.build_graph_of_solution(prevsol, G)
     print("starting fitness : " + str(gt.fitness_evaluation(prevsol, G)))
     newsol = neighbour(G, solgraph, prevsol)
+    cpt = 0
     while prevsol != newsol:
-        print("new local search iteration")
+        cpt +=1
         prevsol = newsol
         newsol = neighbour(G, solgraph, prevsol)
+    print()
+    print(cpt)
     return gt.fitness_evaluation(newsol, G)
 
 
@@ -69,6 +73,7 @@ def neighbour(G, gsol, solution):
                 return newsol
     return solution
 
+start_time = time.time()
+graph = gt.graph_loader("B/b10.stp")
+print("result fitness : " + str(local_search(graph,"mst")))
 
-graph = gt.graph_loader("C/c07.stp")
-print("result fitness : " + str(local_search(graph)))

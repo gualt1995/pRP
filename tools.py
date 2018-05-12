@@ -71,7 +71,7 @@ def heuristic_generation(n, G, **kwargs):
     population = list()
     size = gt.size_of_solution(G)
     heuristic = kwargs.get('heuristic', 'shortest_path')
-    if type(heuristic) == 'str':
+    if isinstance(heuristic, str):
         heuristic = [(heuristic, 1.0)]
 
     for h in heuristic:
