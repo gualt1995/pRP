@@ -37,8 +37,14 @@
 \tikzstyle{vertex}=[circle, draw, inner sep=0pt, minimum size=6pt]
 \newcommand{\vertex}{\node[vertex]}
 \usetikzlibrary{arrows,petri,topaths,calc}
-% ref commands
-%\newcommand{\fref}[1]{\textbf{Fig.~\ref{#1}}}
+% listing style
+\lstset{
+frame=single,
+basicstyle=\ttfamily\small,
+numbers=left,
+%numbersep=5pt,
+%font=\ttfamily
+}
 
 %-----------------------------------------------
 % DOCUMENT BODY
@@ -98,6 +104,159 @@
 	
 	L'algorithme génétique a été conçu de façon modulaire afin de pouvoir accueillir différentes fonctions d'initialisation, différents opérateurs de croisement et de mutation, etc. Il a ainsi été possible d'étudier les performances de chaque composante pour les différentes types d'instances considérés. L'algorithme de recherche locale réutilise les mêmes fonctions d'initialisation.
 	
+\section{Algorithme génétique}
+	Un algorithme génétique consiste généralement en l'enchaînement des actions suivantes sur plusieurs générations: \textit{Initialisation, Sélection, Crossover, Mutation}. La phase d'initialisation permet de générer une population d'individus qui seront ensuite sélectionnés, croisés, et mutés afin de construire la génération suivante.
+
+	\subsection{Population initiale}
+		Les individus solutions sont représentés par un vecteur de variables binaires pour chaque sommet facultatif, prenant la valeur $1$ si le sommet est présent dans la solution et 0 sinon. Par exemple, la solution de l'exemple en~\Cref{fig-ex1} est représenté par le vecteur suivant.
+		\begin{figure}[h!]
+			\centering
+			\begin{tabular}{|c|c|c|c|}
+				\hline
+				$u_1$ & $u_2$ & $u_3$ & $u_4$ \\
+				\hline
+				1 & 1 & 0 & 0 \\
+				\hline
+			\end{tabular}
+		\end{figure}
+	
+		\paragraph{Initialisation aléatoire}{
+			Une première approche pour la phase d'initialisation a été de produire des individus en choisissant, de manière aléatoire, les sommets pris dans la solution. Les proportions de sommets pris dans une solution sont tirées aléatoirement entre 5 et 20\% lors de la génération d'un individu. On essaye ainsi de se rapprocher le plus possible de l'optimum tout en s'assurant une certaine diversité dans la population de départ.
+			
+			La~\Cref{tab-randominit} montre des coûts de départ pour quelques instances. On se rend vite compte qu'ils se trouvent souvent bien loin des solutions optimales et c'est pourquoi on utilisera par la suite des heuristiques de construction. Le temps de résolution étant borné à 5 minutes, on essaye ainsi d'améliorer les performances de nos algorithmes. Cette méthode de génération reste cependant intéressante pour introduire de la diversité dans nos population initiales. Elle sera désignée par \texttt{random} dans la suite de ce rapport.
+			
+			\begin{table}[h!]
+				\centering
+				\begin{tabular}{|c|c|c|c|c|}
+					\hline
+					\textbf{Génération} & \textbf{Instance} & \textbf{Proportion} & \textbf{Coût} & \textbf{Opt} \\
+					\hline
+					1&b02  & 0.31 & 5075 & 83 \\
+					2&b02  & 0.45 & 3602 & 83 \\
+					3&b02  & 0.35 & 3102 & 83 \\
+					1&b08  & 0.40 & 5112 & 104 \\
+					2&b08  & 0.47 & 5180 & 104 \\
+					3&b08  & 0.36 & 3174 & 104 \\
+					1&c18  & 0.46 & 312 & 113 \\
+					2&c18  & 0.44 & 302 & 113 \\
+					3&c18  & 0.31 & 238 & 133 \\
+					\hline
+				\end{tabular}
+				\caption{Exemple de population initiale aléatoire}
+				\label{tab-randominit}
+			\end{table}
+			}
+		\paragraph{Heuristique du plus court chemin}{
+			L'heuristique de construction du plus court chemin (\texttt{shortest\_path}) reste la plus efficace en terme de coût initial. Elle consiste en la construction d'un arbre couvrant depuis le graphe des distances des sommets terminaux. Puisqu'elle est déterministe, on procède avant la génération à une randomisation du graphe problème pour obtenir davantage d'individus différents.
+		
+		La~\Cref{tab-spinit} présente les coups obtenus grâce à cette heuristique pour quelques instances. Le graphe d'origine est altéré de 5 à 20\% pour chaque poids mais il est apparent que la perturbation de l'heuristique est faible: les solutions générées sont souvent identiques.
+		
+		\begin{table}[h!]
+				\centering
+				\begin{tabular}{|c|c|c|c|}
+					\hline
+					\textbf{Génération} & \textbf{Instance} & \textbf{Coût} & \textbf{Opt} \\
+					\hline
+					1 & b02  & 92 & 83 \\
+					2 & b02  & 94 & 83 \\
+					3 & b02  & 92 & 83 \\
+					1 & b08  & 113 & 104 \\
+					2 & b08  & 113 & 104 \\
+					3 & b08  & 113 & 104 \\
+					1 & c18  & 137 & 113 \\
+					2 & c18  & 142 & 113 \\
+					3 & c18  & 139 & 133 \\
+					\hline
+				\end{tabular}
+				\caption{Génération avec \texttt{shortest\_path}}
+				\label{tab-spinit}
+			\end{table}
+		}
+		\paragraph{Heuristique de l'arbre couvrant minimum}{
+		Cette heuristique (\texttt{mst}) nous permet d'améliorer la diversité de la population initiale. Quelques générations sont présentées en~\Cref{tab-mstinit}.
+		
+		\begin{table}[h!]
+			\centering
+			\begin{tabular}{|c|c|c|c|}
+				\hline
+				\textbf{Génération} & \textbf{Instance} & \textbf{Coût} & \textbf{Opt} \\
+				\hline
+				1&b02  & 93  &83 \\
+				2&b02  & 97   &83\\
+				3&b02  & 96  &83 \\
+				1&b08  & 111  &104\\
+				2&b08  & 107  &104\\
+				3&b08  & 107  &104\\
+				1&c18  & 224  &133\\
+				2&c18  & 210  &133\\
+				3&c18  & 209  &133\\
+				\hline
+			\end{tabular}
+			\caption{Génération avec \texttt{mst}}
+			\label{tab-mstinit}
+		\end{table}
+		}
+		
+		Notre algorithme génétique utilisera une population constituée d'individus issus de ces trois méthodes de génération. L'heuristique \texttt{shortest\_path} est très coûteuse pour des graphes avec beaucoup de nœuds terminaux et/ou d'arêtes, et elle produit peu d'individus différents malgré la randomisation du graphe de départ. C'est pourquoi seul un faible pourcentage y sera dédié. Par exemple, une population initiale pourra comprendre 5\% de \texttt{shortest\_path}, 60\% d'heuristique de \texttt{mst} et 25\% de \texttt{random}.
+
+	\subsection{Processus de sélection}
+		L'étape suivante demande la sélection de plusieurs individus parmi la population courante, à partir desquels seront produits des "enfants" pour constituer la génération suivante. L'idée est de choisir les meilleurs éléments tout en introduisant de l'aléa afin  d'espérer une évolution. Plusieurs processus différents ont été implémenté et testés.
+		
+		\paragraph{Fitness proportionate selection (\texttt{FPS})}{
+			À chaque individu correspond une mesure de fitness ($\frac{1}{\text{coût}}$) qui augmente avec la qualité de la solution et qui nous permet, dans cette sélection, de choisir les individus selon leur coût. Ceux avec le coût le plus bas auront le plus de chance d'être choisi. Ainsi, l'implémentation est simple: une liste cumulative de fitness est construite, une valeur aléatoire est tirée et un simple parcours de liste permet de choisir un individu. Les performances de ce processus ainsi que des suivants sont détaillés en~\Cref{sec-perf}.
+		}
+		\paragraph{Stochastic Universal Sampling (\texttt{SUS})}{
+			Un autre processus, moins biaisé envers les solutions de grandes fitness, est \texttt{SUS}. Une seule position aléatoire est tirée et les individus sont choisis depuis cette position dans la population selon des intervalles réguliers. On s'assure ainsi que les meilleurs solutions ne soient pas choisies invariablement. Le pseudo-code suivant, trouvé sur Wikipedia, a été implémenté.
+			\begin{lstlisting}
+F := total fitness of Population
+N := number of offspring to keep
+P := distance between the pointers (F/N)
+Start := random number between 0 and P
+Pointers := [Start + i*P | i in [0..(N-1)]]
+
+Keep = list()
+for P in Pointers
+    i := 0
+    while fitness sum of Population[0..i] < P
+        i++
+    add Population[i] to Keep
+return Keep
+			\end{lstlisting}
+		}
+		\paragraph{Tournament Selection (\texttt{TS})}{
+		Enfin, un processus de tournoi a été implémenté: un sous-ensemble de la population est choisi et est trié (par défaut 70\% de la population initiale est choisi aléatoirement). La probabilité pour un individu d'être tiré est ensuite décidée selon le peudo-code suivant.
+			\begin{lstlisting}
+choose the best individual from the tournament with probability p
+choose the second best individual with probability p*(1-p)
+choose the third best individual with probability p*((1-p)^2)
+and so on
+			\end{lstlisting}		
+		Puisque les individus sont tirés parmi un sous-ensemble aléatoire de la population, on s'assure ici aussi de ne pas toujours choisir les meilleures solutions. Ainsi les opérateurs de croisement utilisés pourront peut-être mener vers une évolution positive de la population.
+		}
+	\subsection{Opérateurs de croisement et mutation}
+		
+		Les individus choisis lors de la sélection sont croisés et mutés avec les opérateurs décrit dans cette section. La nouvelle population est choisie parmi les parents et les enfants par élitisme: 30\% est constituée des meilleurs solutions et le reste est tiré aléatoirement parmi les restants (toujours dans une optique de diversité de la population).
+		
+		\paragraph{Croisement à point (\texttt{SPC})}{
+		L'opérateur de croisement à point unique consiste à choisir une position aléatoire dans les solutions parentes et à intervertir les différentes parties des parents autour de ce point pour produire deux enfants (illustré en~\Cref{fig-spc}).
+			\begin{figure}[h!]
+				\centering
+				\includegraphics[width=0.3\linewidth]{spc.png}
+				\caption{Exemple de croisement à point unique}
+				\label{fig-spc}
+			\end{figure}
+			C'est l'opérateur qui a été le plus prometteur dans nos tests mais beaucoup d'opérateurs souvent utilisés dans les algorithmes génétiques sont absents de ce projet.
+		}
+		\paragraph{Croisement uniforme (\texttt{UC})}{
+		Dans ce croisement, deux enfants sont produits et pour chaque bit d'un enfant, on choisit soit le bit du premier parent soit du second parent à la même position. La probabilité pour chaque bit d'appartenir à un quelconque parent est donc uniforme mais il est très facile d'imaginer une probabilité proportionnelle à la qualité du parent. Malheureusement, par manque de temps, aucune implémentation n'est proposée ici et seul un croisement uniforme a été testé.
+		}
+		\paragraph{Mutation}{
+			Un unique type de mutation a été testé: chaque bit a une probabilité de $\frac{1}{\text{s}}$ d'être modifié avec $s$ le nombre de bits d'une solution. En moyenne on a donc un bit muté par enfant.
+		}
+	
+	\subsection{Performances}
+	\label{sec-perf}
+	
 	Dans ce rapport, tous les algorithmes sont testés sur les ensembles d'instances disponibles à l'adresse \url{http://steinlib.zib.de/testset.php}. Les instances sélectionnées parmi les ensembles $B$, $C$, $D$ et $E$, sont répertoriées en~\Cref{tab-instances}.
 	
 	\begin{table}[h!]
@@ -125,110 +284,41 @@
 		\label{tab-instances}
 	\end{table}
 	
-\section{Algorithme génétique}
-	Un algorithme génétique consiste généralement en l'enchaînement des actions suivantes sur plusieurs générations: \textit{Initialisation, Sélection, Crossover, Mutation}. La phase d'initialisation permet de générer une population d'individus qui seront ensuite sélectionnés, croisés, et mutés afin de construire la génération suivante.
+	Les performances de l'algorithme génétique sont visibles en~\Cref{tab-perfgen}. Chaque exécution est alloué un maximum de 100 itérations et une population de 100 individus. Les solutions moyennes présentées résultent chacune de 4 exécutions selon les mêmes paramètres.
+	Pour les instances \textit{b02, b08, b10, b17} et \textit{e02}, les populations initiales sont générées dans les proportions suivantes: 10\% de \texttt{shortest\_path}, 30\% de \texttt{random} et 60\% de \texttt{mst}.
+	\begin{table}[h!]
+		\centering
+		\begin{tabular}{|c|c|c|c|c|c|c|}
+		\hline
+\textbf{Instance} & \textbf{Selection} & \textbf{Operator} & \textbf{Avg Time (secs)} & \textbf{Avg Solution} & \textbf{Opt} & \textbf{Error} \\
+\hline
+\textcolor{red}{b02} & FPS & SPC & 7.70 & 83 & 83 & 0\% \\
+b08 & FPS & SPC & 10.38 & 105.5 & 104 & 1.4\% \\
+b08 & SUS & SPC & & & 104 & \\
+b10 & FPS & SPC & 9.37 & 86 & 86 & 0\% \\
 
-	\subsection{Population initiale}
-		Les individus solutions sont représentés par un vecteur de variables binaires pour chaque sommet facultatif, prenant la valeur $1$ si le sommet est présent dans la solution et 0 sinon. Par exemple, la solution de l'exemple en~\Cref{fig-ex1} est représenté par le vecteur suivant.
-		\begin{figure}[h!]
-			\centering
-			\begin{tabular}{|c|c|c|c|}
-				\hline
-				$u_1$ & $u_2$ & $u_3$ & $u_4$ \\
-				\hline
-				1 & 1 & 0 & 0 \\
-				\hline
-			\end{tabular}
-		\end{figure}
-	
-		\paragraph{Initialisation aléatoire}{
-			Une première approche pour la phase d'initialisation a été de produire des individus en choisissant, de manière aléatoire, les sommets pris dans la solution. Les proportions de sommets pris dans une solution sont tirées aléatoirement entre 5 et 20\% lors de la génération d'un individu. On essaye ainsi de se rapprocher le plus possible de l'optimum tout en s'assurant une certaine diversité dans la population de départ.
-			
-			La~\Cref{tab-randominit} montre des coûts de départ pour quelques instances. On se rend vite compte qu'ils se trouvent souvent bien loin des solutions optimales et c'est pourquoi on utilisera par la suite des heuristiques de construction. Le temps de résolution étant borné à 5 minutes, on essaye ainsi d'améliorer les performances de nos algorithmes. Cette méthode de génération reste cependant intéressante pour introduire de la diversité dans nos population initiales.
-			
-			\begin{table}[h!]
-				\centering
-				\begin{tabular}{|c|c|c|c|c|}
-					\hline
-					\textbf{Génération} & \textbf{Instance} & \textbf{Proportion} & \textbf{Coût} & \textbf{Opt} \\
-					\hline
-					1&b02  & 0.31 & 5075 & 83 \\
-					2&b02  & 0.45 & 3602 & 83 \\
-					3&b02  & 0.35 & 3102 & 83 \\
-					1&b08  & 0.40 & 5112 & 104 \\
-					2&b08  & 0.47 & 5180 & 104 \\
-					3&b08  & 0.36 & 3174 & 104 \\
-					1&c18  & 0.46 & 312 & 113 \\
-					2&c18  & 0.44 & 302 & 113 \\
-					3&c18  & 0.31 & 238 & 133 \\
-					\hline
-				\end{tabular}
-				\caption{Exemple de population initiale aléatoire}
-				\label{tab-randominit}
-			\end{table}
-			}
-		\paragraph{Heuristique du plus court chemin}{
-			L'heuristique de construction du plus court chemin reste la plus efficace en terme de coût initial. Elle consiste en la construction d'un arbre couvrant depuis le graphe des distances des sommets terminaux. Puisqu'elle est déterministe, on procède avant la génération à une randomisation du graphe problème pour obtenir davantage d'individus différents.
-		
-		La~\Cref{tab-spinit} présente les coups obtenus grâce à cette heuristique pour quelques instances. Le graphe d'origine est altéré de 5 à 20\% pour chaque poids mais il est apparent que la perturbation de l'heuristique est faible: les solutions générées sont souvent identiques.
-		
-		\begin{table}[h!]
-				\centering
-				\begin{tabular}{|c|c|c|c|}
-					\hline
-					\textbf{Génération} & \textbf{Instance} & \textbf{Coût} & \textbf{Opt} \\
-					\hline
-					1 & b02  & 92 & 83 \\
-					2 & b02  & 94 & 83 \\
-					3 & b02  & 92 & 83 \\
-					1 & b08  & 113 & 104 \\
-					2 & b08  & 113 & 104 \\
-					3 & b08  & 113 & 104 \\
-					1 & c18  & 137 & 113 \\
-					2 & c18  & 142 & 113 \\
-					3 & c18  & 139 & 133 \\
-					\hline
-				\end{tabular}
-				\caption{Génération avec heuristique du plus court chemin}
-				\label{tab-spinit}
-			\end{table}
-		}
-		\paragraph{Heuristique de l'arbre couvrant minimum}{
-		Cette heuristique nous permet d'améliorer la diversité de la population initiale. Quelques générations sont présentées en~\Cref{tab-mstinit}.
-		
-		\begin{table}[h!]
-			\centering
-			\begin{tabular}{|c|c|c|c|}
-				\hline
-				\textbf{Génération} & \textbf{Instance} & \textbf{Coût} & \textbf{Opt} \\
-				\hline
-				1&b02  & 93  &83 \\
-				2&b02  & 97   &83\\
-				3&b02  & 96  &83 \\
-				1&b08  & 111  &104\\
-				2&b08  & 107  &104\\
-				3&b08  & 107  &104\\
-				1&c18  & 224  &133\\
-				2&c18  & 210  &133\\
-				3&c18  & 209  &133\\
-				\hline
-			\end{tabular}
-			\caption{Génération avec heuristique de l'arbre couvrant minimum}
-			\label{tab-mstinit}
-		\end{table}
-		}
-		
-		Notre algorithme génétique 
+b17 & FPS & SPC & 17.4 & 131.5 & 131 & 0.3\% \\
 
-	\subsection{Processus de sélection}
-			
-		\paragraph{Fitness proportionate selection}{}
-		\paragraph{Stochastic Universal Sampling}{}
-		\paragraph{Tournament Selection}{}
-	\subsection{Opérateurs de croisement}
-		\paragraph{Croisement à point}{}
-		\paragraph{Croisement uniforme}{}
-	
+c02 & FPS & SPC & 13.35 & 148 & 144 & 2.7\% \\
+
+c05 & FPS & SPC & 102.9 & 1598 & 1579 & 1.2\% \\
+
+c12 & FPS & SPC & 16.8 & 57.25 & 46 & 24.4\% \\
+
+c18 & FPS & SPC & 235.6 & 158.25 & 113 & 40\% \\
+
+d02 & FPS & SPC & 25.82 & 233.5 & 220 & 6\% \\
+
+d04 & FPS & SPC & 157.6 & 2087.75 & 1935 & 7\% \\
+
+d10 & FPS & SPC & 257.3 & 2182 & 2110 & 3.4\% \\
+
+e02 & FPS & SPC & 41.2 & 244 & 214 & 14\% \\
+		\end{tabular}
+		\caption{Performances de l'algorithme génétique}
+		\label{tab-perfgen}
+	\end{table}
+
 	
 \section{Recherche locale}
 \section{Conclusion}

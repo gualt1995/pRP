@@ -62,7 +62,7 @@ class TournamentSelection:
     DEFAULT_PROPORTION = 0.7
 
     def __init__(self, **kwargs):
-        """Construct the selection pool.
+        """
 
         Args:
             solutions (tuple list): List of candidate solutions with
@@ -71,20 +71,11 @@ class TournamentSelection:
                 Defaults to 50% chance.
             size (int): Number of candidates to be chosen in the tournament.
         """
-        p = kwargs.get('p', TournamentSelection.DEFAULT_PROBABILITY)
-        tournament_size = kwargs.get('size', int(len(kwargs['solutions'])
+        self.p = kwargs.get('p', TournamentSelection.DEFAULT_PROBABILITY)
+        self.tournament_size = kwargs.get('size', int(len(kwargs['solutions'])
                                                  * TournamentSelection.DEFAULT_PROPORTION))
-        self._selection_pool = list()
-        if tournament_size == len(kwargs['solutions']):
-            candidates = kwargs['solutions']
-        else:
-            candidates = sorted(random.sample(kwargs['solutions'], tournament_size),
-                            key=itemgetter(1), reverse=True)
+        self.solutions = kwargs['solutions']
 
-        cum_sum = 0
-        for i in range(tournament_size):
-            self._selection_pool.append((candidates[i][0], cum_sum))
-            cum_sum += p * pow(1 - p, i)
 
     def select(self, k=2):
         """Select k chromosomes from the selection pool.
@@ -97,6 +88,18 @@ class TournamentSelection:
 
         Returns: tuple list
         """
+        self._selection_pool = list()
+        if self.tournament_size == len(self.solutions):
+            candidates = self.solutions
+        else:
+            candidates = sorted(random.sample(self.solutions, self.tournament_size),
+                                key=itemgetter(1), reverse=True)
+
+        cum_sum = 0
+        for i in range(self.tournament_size):
+            self._selection_pool.append((candidates[i][0], cum_sum))
+            cum_sum += self.p * pow(1 - self.p, i)
+
         parents = list()
         for _ in range(k):
             p = random.random()
@@ -134,9 +137,9 @@ class SUSSelection:
         pointer_dst = self.fitness_sum / k
         start = random.uniform(0, pointer_dst)
         pointers = [start + i * pointer_dst for i in range(k)]
-        return self._rws(self._selection_pool, pointers)
+        return self._rws(pointers)
 
-    def _rws(self, population, pointers):
+    def _rws(self, pointers):
         parents = list()
         for pointer in pointers:
             i = 0

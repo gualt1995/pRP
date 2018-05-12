@@ -41,7 +41,7 @@ def uniform_crossover(parent1, parent2, p):
 def uniform_mutation(solution):
     """Generate a solution mutated from a given solution; that is
     for each vertex, the corresponding bit in the solution may be flipped.
-    Default mutation probability is 4%.
+    Default mutation probability is 1/len(solution).
 
     Args:
         solution (string): starting solution

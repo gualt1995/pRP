@@ -3,10 +3,11 @@ from operator import itemgetter
 from operators import operators
 from selections import selections
 import graph_tools as gt
+import time
 
 
 def genetic_algorithm(G, max_steps=100, pop_size=100, operator='single_point_crossover',
-                      selection_process='tournament', p_operator=1, p_gen=(0.2, 0.5),
+                      selection_process='fitness_proportionate', p_operator=1, p_gen=(0.2, 0.5),
                       construction_heuristic=(('mst', 0.6), ('shortest_path', 0.1), ('random', 0.3)),
                       generation_type='heuristic', mutation_type='uniform_mutation', elitism=True,
                       elitism_propotion=0.1):
@@ -29,6 +30,7 @@ def genetic_algorithm(G, max_steps=100, pop_size=100, operator='single_point_cro
     Returns: (float)
         Approximation of the optimal solution
     """
+    TIMEOUT = 300 # Timeout of 300sec = 5mins
     population = generation_types[generation_type](pop_size, G, p_gen=p_gen, heuristic=construction_heuristic)
     selection_process_cls = selections[selection_process]
     operator_func = operators[operator]
@@ -51,7 +53,9 @@ def genetic_algorithm(G, max_steps=100, pop_size=100, operator='single_point_cro
     elites_proportion = int(pop_size*elitism_propotion)
     non_elites_proportion = int(pop_size*(1-elitism_propotion))
 
+    start = time.time()
     for _ in range(max_steps):
+        if time.time() - start >= TIMEOUT: return sorted_pop_fitness[0]
         new_pop_fitness = list()
 
         sorted_pop_fitness = sorted(population_fitness, key=itemgetter(1), reverse=True)
@@ -82,8 +86,19 @@ def genetic_algorithm(G, max_steps=100, pop_size=100, operator='single_point_cro
 
 
 if __name__ == "__main__":
-    graph = gt.graph_loader("C/c05.stp")
-    solution = genetic_algorithm(graph)
-    solution_graph = gt.kruskal(gt.build_graph_of_solution(solution[0], graph))
-    print("Solution cost = {}".format(gt.fitness_evaluation(solution[0], graph)))
-    draw_graph(solution_graph)
+    graph = gt.graph_loader("B/b17.stp")
+    times = []
+    results = []
+    for _ in range(4):
+        start = time.time()
+        solution = genetic_algorithm(graph)
+        t = time.time() - start
+        print("TIME: {}".format(t))
+        solution_graph = gt.kruskal(gt.build_graph_of_solution(solution[0], graph))
+        cost = gt.fitness_evaluation(solution[0], graph)
+        print("Solution cost = {}".format(cost))
+        results.append(cost)
+        times.append(t)
+
+    print("Avg sol: {}, avg time: {}".format(sum(results)/len(results), sum(times)/len(times)))
+    # draw_graph(solution_graph)
