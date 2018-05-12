@@ -73,7 +73,8 @@ def neighbour(G, gsol, solution):
                 return newsol
     return solution
 
+graph = gt.graph_loader("E/e02.stp")
 start_time = time.time()
-graph = gt.graph_loader("B/b10.stp")
-print("result fitness : " + str(local_search(graph,"mst")))
+print("result fitness : " + str(local_search(graph,"random")))
+print("--- %s seconds ---" % (time.time() - start_time))
 
