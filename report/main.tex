@@ -102,7 +102,7 @@ numbers=left,
 		\label{fig-ex1}
 	\end{figure}
 	
-	L'algorithme génétique a été conçu de façon modulaire afin de pouvoir accueillir différentes fonctions d'initialisation, différents opérateurs de croisement et de mutation, etc. Il a ainsi été possible d'étudier les performances de chaque composante pour les différentes types d'instances considérés. L'algorithme de recherche locale réutilise les mêmes fonctions d'initialisation.
+	L'algorithme génétique a été conçu de façon modulaire et peut accueillir différentes fonctions d'initialisation, opérateurs de croisement et de mutation, etc. Il a ainsi été possible d'étudier les performances de chaque composante pour les différentes types d'instances considérés. L'algorithme de recherche locale réutilise les mêmes fonctions d'initialisation.
 	
 \section{Algorithme génétique}
 	Un algorithme génétique consiste généralement en l'enchaînement des actions suivantes sur plusieurs générations: \textit{Initialisation, Sélection, Crossover, Mutation}. La phase d'initialisation permet de générer une population d'individus qui seront ensuite sélectionnés, croisés, et mutés afin de construire la génération suivante.
@@ -123,7 +123,7 @@ numbers=left,
 		\paragraph{Initialisation aléatoire}{
 			Une première approche pour la phase d'initialisation a été de produire des individus en choisissant, de manière aléatoire, les sommets pris dans la solution. Les proportions de sommets pris dans une solution sont tirées aléatoirement entre 5 et 20\% lors de la génération d'un individu. On essaye ainsi de se rapprocher le plus possible de l'optimum tout en s'assurant une certaine diversité dans la population de départ.
 			
-			La~\Cref{tab-randominit} montre des coûts de départ pour quelques instances. On se rend vite compte qu'ils se trouvent souvent bien loin des solutions optimales et c'est pourquoi on utilisera par la suite des heuristiques de construction. Le temps de résolution étant borné à 5 minutes, on essaye ainsi d'améliorer les performances de nos algorithmes. Cette méthode de génération reste cependant intéressante pour introduire de la diversité dans nos population initiales. Elle sera désignée par \texttt{random} dans la suite de ce rapport.
+			La~\Cref{tab-randominit} montre des coûts de départ pour quelques instances. Il apparaît qu'ils se trouvent souvent bien loin des solutions optimales et c'est pourquoi on utilisera par la suite des heuristiques de construction. Le temps de résolution étant borné à 5 minutes, on essaye ainsi d'améliorer les performances de nos algorithmes. Cette méthode de génération reste cependant intéressante pour introduire de la diversité dans nos population initiales. Elle sera désignée par \texttt{random} dans la suite de ce rapport.
 			
 			\begin{table}[h!]
 				\centering
@@ -149,7 +149,7 @@ numbers=left,
 		\paragraph{Heuristique du plus court chemin}{
 			L'heuristique de construction du plus court chemin (\texttt{shortest\_path}) reste la plus efficace en terme de coût initial. Elle consiste en la construction d'un arbre couvrant depuis le graphe des distances des sommets terminaux. Puisqu'elle est déterministe, on procède avant la génération à une randomisation du graphe problème pour obtenir davantage d'individus différents.
 		
-		La~\Cref{tab-spinit} présente les coups obtenus grâce à cette heuristique pour quelques instances. Le graphe d'origine est altéré de 5 à 20\% pour chaque poids mais il est apparent que la perturbation de l'heuristique est faible: les solutions générées sont souvent identiques.
+		La~\Cref{tab-spinit} présente les coups obtenus grâce à cette heuristique pour quelques instances. Le graphe d'origine est altéré de 5 à 20\% pour chaque poids mais il est évident que la perturbation de l'heuristique est faible: les solutions générées sont souvent identiques.
 		
 		\begin{table}[h!]
 				\centering
@@ -173,7 +173,7 @@ numbers=left,
 			\end{table}
 		}
 		\paragraph{Heuristique de l'arbre couvrant minimum}{
-		Cette heuristique (\texttt{mst}) nous permet d'améliorer la diversité de la population initiale. Quelques générations sont présentées en~\Cref{tab-mstinit}.
+		Cette heuristique (\texttt{mst}), relativement facile à calculer, nous permet d'améliorer la diversité de la population initiale. Le graphe d'origine (randomisé comme précédemment) est réduit au maximum en enlevant successivement les nœuds facultatifs de degré $1$. Les coûts de départ sont généralement moins bons que \texttt{shortest\_path} mais cette heuristique est plus sensible à la randomisation et donne plus d'individus différents. Quelques générations sont présentées en~\Cref{tab-mstinit}.
 		
 		\begin{table}[h!]
 			\centering
@@ -197,13 +197,13 @@ numbers=left,
 		\end{table}
 		}
 		
-		Notre algorithme génétique utilisera une population constituée d'individus issus de ces trois méthodes de génération. L'heuristique \texttt{shortest\_path} est très coûteuse pour des graphes avec beaucoup de nœuds terminaux et/ou d'arêtes, et elle produit peu d'individus différents malgré la randomisation du graphe de départ. C'est pourquoi seul un faible pourcentage y sera dédié. Par exemple, une population initiale pourra comprendre 5\% de \texttt{shortest\_path}, 60\% d'heuristique de \texttt{mst} et 25\% de \texttt{random}.
+		Notre algorithme génétique utilisera donc une population constituée d'individus issus de ces trois méthodes de génération. L'heuristique \texttt{shortest\_path} est très coûteuse pour des graphes avec beaucoup de nœuds terminaux et/ou d'arêtes, et elle produit peu d'individus différents malgré la randomisation du graphe de départ. C'est pourquoi seul un faible pourcentage y sera dédié. Par exemple, une population initiale pourra comprendre 5\% de \texttt{shortest\_path}, 60\% d'heuristique de \texttt{mst} et 25\% de \texttt{random}.
 
 	\subsection{Processus de sélection}
 		L'étape suivante demande la sélection de plusieurs individus parmi la population courante, à partir desquels seront produits des "enfants" pour constituer la génération suivante. L'idée est de choisir les meilleurs éléments tout en introduisant de l'aléa afin  d'espérer une évolution. Plusieurs processus différents ont été implémenté et testés.
 		
 		\paragraph{Fitness proportionate selection (\texttt{FPS})}{
-			À chaque individu correspond une mesure de fitness ($\frac{1}{\text{coût}}$) qui augmente avec la qualité de la solution et qui nous permet, dans cette sélection, de choisir les individus selon leur coût. Ceux avec le coût le plus bas auront le plus de chance d'être choisi. Ainsi, l'implémentation est simple: une liste cumulative de fitness est construite, une valeur aléatoire est tirée et un simple parcours de liste permet de choisir un individu. Les performances de ce processus ainsi que des suivants sont détaillés en~\Cref{sec-perf}.
+			À chaque individu correspond une mesure de fitness ($\frac{1}{\text{coût}}$) qui augmente avec la qualité de la solution et qui nous permet, avec FPS, de choisir les individus selon leur coût. Ceux avec le coût le plus bas auront le plus de chance d'être choisi. Ainsi, l'implémentation est simple: une liste cumulative de fitness est construite, une valeur aléatoire est tirée et un simple parcours de liste permet de choisir un individu. Les performances de ce processus ainsi que des suivants sont détaillés en~\Cref{sec-perf}.
 		}
 		\paragraph{Stochastic Universal Sampling (\texttt{SUS})}{
 			Un autre processus, moins biaisé envers les solutions de grandes fitness, est \texttt{SUS}. Une seule position aléatoire est tirée et les individus sont choisis depuis cette position dans la population selon des intervalles réguliers. On s'assure ainsi que les meilleurs solutions ne soient pas choisies invariablement. Le pseudo-code suivant, trouvé sur Wikipedia, a été implémenté.
@@ -224,18 +224,18 @@ return Keep
 			\end{lstlisting}
 		}
 		\paragraph{Tournament Selection (\texttt{TS})}{
-		Enfin, un processus de tournoi a été implémenté: un sous-ensemble de la population est choisi et est trié (par défaut 70\% de la population initiale est choisi aléatoirement). La probabilité pour un individu d'être tiré est ensuite décidée selon le peudo-code suivant.
+		Enfin, un processus de tournoi a été testé: un sous-ensemble de la population est choisi et est trié (par défaut 70\% de la population initiale est choisi aléatoirement). La probabilité pour un individu d'être choisi est ensuite décidée selon le peudo-code suivant.
 			\begin{lstlisting}
 choose the best individual from the tournament with probability p
 choose the second best individual with probability p*(1-p)
 choose the third best individual with probability p*((1-p)^2)
 and so on
 			\end{lstlisting}		
-		Puisque les individus sont tirés parmi un sous-ensemble aléatoire de la population, on s'assure ici aussi de ne pas toujours choisir les meilleures solutions. Ainsi les opérateurs de croisement utilisés pourront peut-être mener vers une évolution positive de la population.
+		Puisque les individus sont tirés parmi un sous-ensemble aléatoire de la population, on s'assure ici aussi de ne pas toujours choisir les mêmes solutions. Ainsi les opérateurs de croisement utilisés pourront peut-être mener vers une évolution positive de la population.
 		}
 	\subsection{Opérateurs de croisement et mutation}
 		
-		Les individus choisis lors de la sélection sont croisés et mutés avec les opérateurs décrit dans cette section. La nouvelle population est choisie parmi les parents et les enfants par élitisme: 30\% est constituée des meilleurs solutions et le reste est tiré aléatoirement parmi les restants (toujours dans une optique de diversité de la population).
+		Les individus choisis lors de la sélection sont croisés et mutés avec les opérateurs décrit dans cette section. La nouvelle population est choisie parmi les parents et les enfants par élitisme: 10\% est constituée des meilleurs solutions et le reste est tiré aléatoirement parmi les restants (toujours dans une optique de diversité de la population).
 		
 		\paragraph{Croisement à point (\texttt{SPC})}{
 		L'opérateur de croisement à point unique consiste à choisir une position aléatoire dans les solutions parentes et à intervertir les différentes parties des parents autour de ce point pour produire deux enfants (illustré en~\Cref{fig-spc}).
@@ -284,7 +284,8 @@ and so on
 		\label{tab-instances}
 	\end{table}
 	
-	Les performances de l'algorithme génétique sont visibles en~\Cref{tab-perfgen}. Chaque exécution est alloué un maximum de 100 itérations et une population de 100 individus. Les solutions moyennes présentées résultent chacune de 4 exécutions selon les mêmes paramètres.
+	    Les performances de l'algorithme génétique sont visibles en~\Cref{tab-perfgen}. Chaque exécution est alloué un maximum de 100 itérations et une population de 100 individus. Les solutions moyennes présentées résultent chacune de 4 exécutions selon les mêmes paramètres. L'opérateur de croisement uniforme donnant des résultats peu satisfaisants, il est absent des mesures de performances dans ce rapport.
+	    
 	    Pour les instances \textit{b02, b08, b10, b17, b18, c02, c12, d02} et \textit{e02}, les populations initiales sont générées dans les proportions suivantes: 10\% de \texttt{shortest\_path}, 30\% de \texttt{random} et 60\% de \texttt{mst}. Le reste des instances (\textit{c05, c18, d04, d10}) étant trop longues à calculer pour \texttt{shortest\_path}, les populations initiales sont composées de 60\% de \texttt{mst} et 40\% de \texttt{random}.
 
 	\begin{table}[h!]
@@ -342,29 +343,28 @@ e02 & TS & SPC & 108.7 & 244 & 214 & 14\% \\
 		\label{tab-perfgen}
 	\end{table}
 	
-	
+	\paragraph{Interprétation}{
+	 On se rend compte que le meilleur processus de sélection n'est pas toujours le même et change selon les instances. Si \texttt{FPS} donne les meilleurs résultats pour les instances de type $B$, il est souvent moins bons sur le reste des instances que \texttt{TS} qui règne en maître sur la plupart du tableau. En outre, lors des exécutions des grandes instances (\textit{c12} et \textit{c18} par exemple) beaucoup d'itérations ne montraient pas d'évolution du meilleur coût. Cela est peut être dû à l'opérateur utilisé, plutôt simpliste.
+	}
 	
 	
 \section{Recherche locale}
 
-Le patron d'un algorithme de recherche locale est constitué de deux parties. La première étape étant l'initialisation qui nécessite de trouver une solution au problème de manière rapide, grâce à une heuristique par exemple. La seconde étape consiste ensuite à générer une ou plusieurs solutions voisines à partir de la solution précédente et en choisir une parmi celle-ci. On répète ensuite ce procédé jusqu'à une condition d'arrêt.
+Le patron d'un algorithme de recherche locale est constitué de deux parties. La première étape étant l'initialisation qui nécessite de trouver une solution au problème de manière rapide, grâce à une heuristique par exemple. La seconde étape consiste ensuite à générer une ou plusieurs solutions voisines à partir de la solution précédente et en choisir une parmi celles-ci. On répète ensuite ce procédé jusqu'à une condition d'arrêt.
 
 \subsection{Implémentation}
-Pour la génération de la solution initiale, nous avons utilisé les heuristiques de construction décrites précédemment, (\texttt{shortest\_path} et \texttt{mst}). Les solutions voisines sont générées de la façon suivante : les nœuds non terminaux du graphe sont parcours par ordre d'apparition, si le nœud fait parti de la solution courante (bit à $1$), alors on enlève ce dernier de la solution et on recalcule le score du nouveau graphe. Inversement si le nœud ne fait pas parti de la solution courante (bit a $0$), alors si celui-ci est lié par plus de deux arêtes a un des sommets de la solution courante, on l'ajoute et on recalcule le score.
+Pour la génération de la solution initiale, nous avons utilisé les heuristiques de construction décrites précédemment, (\texttt{shortest\_path} et \texttt{mst}). Les solutions voisines sont générées de la façon suivante : les nœuds non terminaux du graphe sont parcourus par ordre d'apparition, si le nœud fait parti de la solution courante (bit à $1$), alors on enlève ce dernier de la solution et on recalcule le score du nouveau graphe. Inversement si le nœud ne fait pas parti de la solution courante (bit a $0$), alors si celui-ci est lié par plus de deux arêtes a un des sommets de la solution courante, on l'ajoute et on recalcule le score.
     Si le score de la nouvelle solution est supérieur à celui de l'ancienne, alors cette nouvelle solution devient la solution courante. Cette étape est répétée jusqu'à ce qu'on ne puisse plus trouver de solution améliorante.
-    
-\paragraph{Interprétation} 
-Notre algorithme de recherche locale étant déterministe(dut a l'implémentation de la recherche de voisins) le résultat de l'exécution de varie grandement en fonction de l'heuristique choisie, on remarque en effet que les performances de la recherche locale sont médiocres lorsque l'heuristique choisie est \texttt{random}. d'une manière générale pour les heuristiques (\texttt{shortest\_path} et \texttt{mst}) la recherche locale converge bien plus rapidement que l'algorithme génétique mais la marge d'erreur par rapport a la solution optimale est supérieure.
 
     
 \subsection{Performances}
 
-	Les performances de la recherche locale sont visibles en~\Cref{tab-perfls}.Pour chaque Instance sélectionnée : \textit{b02, b08, b10, b17, c02, c12, d02, e02} nous générons les solution initiales avec 3 différentes heuristiques : (\texttt{shortest\_path} et \texttt{mst}) et \texttt{random}, ensuite pour chacune de ces heuristiques nous lançons l'algorithme de recherche locale 3 fois, chaque ligne correspond donc a une moyenne sur 3 exécutions. les données récupérer sont donc les suivantes, le score avant la recherche locale, le nombre d'itération de la recherche de voisins, la valeur de la solution après l'exécution de l'algorithme, et enfin le temps d'exécution. 
+	Les performances de la recherche locale sont visibles en~\Cref{tab-perfls}. Pour chaque instance sélectionnée parmi \textit{b02, b08, b10, b17, c02, c12, d02, et e02}, nous générons les solution initiales avec les trois différentes méthodes de génération : \texttt{shortest\_path}, \texttt{mst} et \texttt{random}. Pour chacune des heuristiques l'algorithme de recherche locale est lancé trois fois, chaque ligne correspond donc a une moyenne sur 3 exécutions. Les données récupérées sont donc les suivantes: le score moyen avant la recherche locale (Init. Score), le nombre d'itération moyen de la recherche de voisins (Avg Iter.), la valeur moyenne de la solution après l'exécution de l'algorithme (Avg Sol.), et enfin le temps d'exécution moyen (Avg Time). 
 	\begin{table}[h!]
 		\centering
 		\begin{tabular}{|c|c|c|c|c|c|c|c|}
 		\hline
-\textbf{Inst.} & \textbf{Heuristique} & \textbf{Init. \linebreak Score} & \textbf{Avg Iter.} & \textbf{Avg Sol.} & \textbf{Avg Time} & \textbf{Opt} & \textbf{Err.} \\
+\textbf{Inst.} & \textbf{Heuristic} & \textbf{Init. \linebreak Score} & \textbf{Avg Iter.} & \textbf{Avg Sol.} & \textbf{Avg Time} & \textbf{Opt} & \textbf{Err.} \\
 \hline
 b02 & random & 4 416,33 & 15,33 & 255,67 & 0,06 & 83,00 & 208,03\% \\
 b02 & shortest & 97,00 & 3,00 & 89,00 & 0,04 & 83,00 & 7,23\% \\
@@ -403,6 +403,8 @@ e02 & mst & 604,00 & 56,00 & 425,33 & 13,54 & 214,00 & 98,75\% \\
 		\label{tab-perfls}
 	\end{table}
 	
+	\paragraph{Interprétation} 
+Notre algorithme de recherche locale étant déterministe (dû a l'implémentation de la recherche de voisins) le résultat de l'exécution varie grandement en fonction de la méthode de génération choisie. On remarque en effet, sans surprise, que les performances de la recherche locale sont médiocres lorsque la génération choisie est \texttt{random}. D'une manière générale pour les heuristiques (\texttt{shortest\_path} et \texttt{mst}) la recherche locale converge bien plus rapidement que l'algorithme génétique mais la marge d'erreur par rapport a la solution optimale est supérieure. Des comparaisons sont visibles en~\Cref{tab-perfcomp}.
 	
 	\begin{table}[h!]
 		\centering
@@ -421,14 +423,10 @@ e02 & 214,00 & 16,36\% & 14\%\\
 \hline
 		\end{tabular}
 		\caption{comparaison des deux algorithmes}
-		\label{tab-perfls}
+		\label{tab-perfcomp}
 	\end{table}
-
-
 
 \section{Conclusion}
 
-
-
-	
+	Les implémentations proposées dans ce projet présentent des bonnes bases pour la résolution du Steiner Tree Problem. Il est de notre avis, cependant, que plusieurs améliorations sont possibles. En ce qui concerne l'algorithme génétique, il est évident que des opérateurs supplémentaires doivent être testés. L'analyse préalable des instances données à l'algorithme pourrait également se révéler utile pour décider des composantes les plus appropriées à une exécution donnée (métaheuristiques pour décider des processus de sélection et autres opérateurs). L'algorithme de recherche locale, quant à lui, pourrait tirer à son avantage sa rapidité de convergence: relance sur un autre point de départ. Enfin, une combinaison des deux algorithmes est une piste intéressante pour l'amélioration des performances. Procéder à une recherche locale depuis la solution donnée par l'algorithme génétique permettrait d'évoluer positivement après la convergence génétique. On peut aussi imaginer l'évolution d'une population par recherche locale... Malheureusement le temps nous presse et le développement de ces pistes doit être remis à plus tard.
 \end{document}
